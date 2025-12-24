@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>С Новым Годом ✨</title>
+  <style>
+
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    #start {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0a0a2e 0%, #000 100%);
+      z-index: 10;
+      animation: bgPulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes bgPulse {
+      0%, 100% { background: radial-gradient(circle at center, #0a0a2e 0%, #000 100%); }
+      50% { background: radial-gradient(circle at center, #1a1a3e 0%, #000 100%); }
+    }
+    
+    button {
+      font-size: 26px;
+      padding: 25px 55px;
+      border-radius: 50px;
+      border: 3px solid #ffd700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+      color: #000;
+      font-weight: bold;
+      box-shadow: 0 10px 50px rgba(255, 215, 0, 0.5),
+                  inset 0 1px 0 rgba(255,255,255,0.3);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    button::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: rotate(45deg);
+      animation: buttonShine 3s linear infinite;
+    }
+    
+    @keyframes buttonShine {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+    
+    button:hover {
+      transform: scale(1.05) translateY(-2px);
+      box-shadow: 0 15px 70px rgba(255, 215, 0, 0.7),
+                  inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    
+    #loading {
+      color: #ffd700;
+      font-size: 18px;
+      margin-top: 20px;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    #progress {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ffd700;
+      font-size: 22px;
+      font-weight: bold;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
+                   0 0 40px rgba(255, 215, 0, 0.5);
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.5s;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    
+
+#music-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.music-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255, 215, 0, 0.2);
+  border: 2px solid #ffd700;
+  color: #ffd700;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s;
+}
+
+.music-btn:hover {
+  background: rgba(255, 215, 0, 0.4);
+  transform: scale(1.1);
+}
+
+
+
+  </style>
+</head>
+<body>
+
+<div id="start">
+  <button id="go">🎄 Запустить магию 🎄</button>
+  <div id="loading">Загрузка моделей...</div>
+</div>
+
+<div id="progress"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+<script>
+// ========== КЛАССЫ ЗАГРУЗЧИКОВ ==========
+
+class OBJLoader {
+  load(url, onLoad, onProgress, onError) {
+    fetch(url)
+      .then(response => response.text())
+      .then(text => {
+        const geometry = this.parse(text);
+        if (onLoad) onLoad(geometry);
+      })
+      .catch(err => {
+        console.error('OBJ load error:', err);
+        if (onError) onError(err);
+      });
+  }
+  
+  parse(text) {
+    const vertices = [];
+    const normals = [];
+    const uvs = [];
+    const faces = [];
+    
+    const lines = text.split('\n');
+    lines.forEach(line => {
+      const parts = line.trim().split(/\s+/);
+      
+      if (parts[0] === 'v') {
+        vertices.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2]),
+          parseFloat(parts[3])
+        );
+      } else if (parts[0] === 'vn') {
+        normals.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2]),
+          parseFloat(parts[3])
+        );
+      } else if (parts[0] === 'vt') {
+        uvs.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2])
+        );
+      } else if (parts[0] === 'f') {
+        const face = [];
+        for (let i = 1; i < parts.length; i++) {
+          const indices = parts[i].split('/');
+          face.push({
+            v: parseInt(indices[0]) - 1,
+            vt: indices[1] ? parseInt(indices[1]) - 1 : null,
+            vn: indices[2] ? parseInt(indices[2]) - 1 : null
+          });
+        }
+        faces.push(face);
+      }
+    });
+    
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const norms = [];
+    const uvsArray = [];
+    
+    faces.forEach(face => {
+      if (face.length >= 3) {
+        for (let i = 0; i < 3; i++) {
+          const idx = face[i];
+          if (idx.v * 3 + 2 < vertices.length) {
+            positions.push(
+              vertices[idx.v * 3],
+              vertices[idx.v * 3 + 1],
+              vertices[idx.v * 3 + 2]
+            );
+          }
+          if (idx.vn !== null && idx.vn * 3 + 2 < normals.length) {
+            norms.push(
+              normals[idx.vn * 3],
+              normals[idx.vn * 3 + 1],
+              normals[idx.vn * 3 + 2]
+            );
+          }
+          if (idx.vt !== null && idx.vt * 2 + 1 < uvs.length) {
+            uvsArray.push(
+              uvs[idx.vt * 2],
+              uvs[idx.vt * 2 + 1]
+            );
+          }
+        }
+      }
+    });
+    
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    if (norms.length > 0) {
+      geometry.setAttribute('normal', new THREE.Float32BufferAttribute(norms, 3));
+    } else {
+      geometry.computeVertexNormals();
+    }
+    if (uvsArray.length > 0) {
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvsArray, 2));
+    }
+    
+    return geometry;
+  }
+}
+
+class GLTFLoader {
+  load(url, onLoad, onProgress, onError) {
+    fetch(url)
+      .then(response => response.arrayBuffer())
+      .then(buffer => {
+        console.log('GLTF creating space scene');
+        const group = new THREE.Group();
+        
+        // Звезды разных размеров и цветов
+        for (let i = 0; i < 2000; i++) {
+          const size = Math.random() * 0.2 + 0.03;
+          const hue = Math.random() * 0.2 + 0.55;
+          const star = new THREE.Mesh(
+            new THREE.SphereGeometry(size, 6, 6),
+            new THREE.MeshBasicMaterial({ 
+              color: new THREE.Color().setHSL(hue, 0.3, Math.random() * 0.4 + 0.6)
+            })
+          );
+          star.position.set(
+            (Math.random() - 0.5) * 200,
+            (Math.random() - 0.5) * 200,
+            (Math.random() - 0.5) * 200
+          );
+          group.add(star);
+        }
+        
+        // Туманности
+        for (let i = 0; i < 30; i++) {
+          const nebula = new THREE.Mesh(
+            new THREE.SphereGeometry(Math.random() * 4 + 2, 8, 8),
+            new THREE.MeshBasicMaterial({ 
+              color: new THREE.Color().setHSL(Math.random() * 0.3 + 0.5, 0.9, 0.4),
+              transparent: true,
+              opacity: 0.15
+            })
+          );
+          nebula.position.set(
+            (Math.random() - 0.5) * 120,
+            (Math.random() - 0.5) * 120,
+            (Math.random() - 0.5) * 120
+          );
+          group.add(nebula);
+        }
+        
+        if (onLoad) onLoad({ scene: group });
+      })
+      .catch(err => {
+        console.error('GLTF load error, using fallback');
+        const group = new THREE.Group();
+        for (let i = 0; i < 1500; i++) {
+          const star = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1, 6, 6),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+          );
+          star.position.set(
+            (Math.random() - 0.5) * 150,
+            (Math.random() - 0.5) * 150,
+            (Math.random() - 0.5) * 150
+          );
+          group.add(star);
+        }
+        if (onLoad) onLoad({ scene: group });
+      });
+  }
+}
+
+// ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+
+
+
+
+const startBtn = document.getElementById("go");
+const startScreen = document.getElementById("start");
+const progressDiv = document.getElementById("progress");
+const loadingDiv = document.getElementById("loading");
+
+let scene, camera, renderer;
+let girl, note, cityScene, spaceScene;
+let phase = 0, time = 0;
+let vortexParticles = [], magicParticles = [];
+let modelsLoaded = 0;
+const totalModels = 3;
+
+// ДОБАВЬТЕ ЭТИ 3 СТРОКИ ЗДЕСЬ ▼
+let audio = null;
+let audioLoaded = false;
+let musicStarted = false;
+
+
+
+const textureLoader = new THREE.TextureLoader();
+const objLoader = new OBJLoader();
+const gltfLoader = new GLTFLoader();
+
+// ========== ФУНКЦИИ ЗАГРУЗКИ ==========
+
+startBtn.onclick = () => {
+  loadingDiv.style.opacity = "1";
+  // Инициализируем аудио при запуске
+  initAudio();
+  loadAssets();
+};
+
+function loadAssets() {
+  // Загрузка девушки с разноцветными материалами
+  objLoader.load(
+    'assets/girl.obj',
+    (geometry) => {
+      // Создаем красивый градиент цветов
+      const vertexColors = [];
+      const positions = geometry.attributes.position.array;
+      
+      // Находим минимум и максимум Y для нормализации
+      let minY = Infinity, maxY = -Infinity;
+      for (let i = 1; i < positions.length; i += 3) {
+        const y = positions[i];
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+      
+      // Добавляем цвета на основе высоты
+      for (let i = 0; i < positions.length; i += 3) {
+        const y = positions[i + 1];
+        const normalizedY = (y - minY) / (maxY - minY);
+        
+        let color;
+        if (normalizedY > 0.8) {
+          // Голова - телесный
+          color = new THREE.Color(0xffccaa);
+        } else if (normalizedY > 0.7) {
+          // Волосы - коричневый
+          color = new THREE.Color(0x8B4513);
+        } else if (normalizedY > 0.3) {
+          // Платье - красивый градиент
+          const hue = 0.95 - normalizedY * 0.2;
+          color = new THREE.Color().setHSL(hue, 0.8, 0.6);
+        } else if (normalizedY > 0.1) {
+          // Ноги - телесный
+          color = new THREE.Color(0xffccaa);
+        } else {
+          // Обувь - темный
+          color = new THREE.Color(0x333333);
+        }
+        
+        vertexColors.push(color.r, color.g, color.b);
+      }
+      
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(vertexColors, 3));
+      
+      const material = new THREE.MeshStandardMaterial({ 
+        vertexColors: true,
+        roughness: 0.7,
+        metalness: 0.1
+      });
+      
+      girl = new THREE.Mesh(geometry, material);
+      girl.scale.set(0.8, 0.8, 0.8);
+      girl.position.set(0, -0.3, 0);
+      girl.castShadow = true;
+      girl.receiveShadow = true;
+      
+      console.log('Girl model loaded with colors');
+      modelLoaded();
+    },
+    undefined,
+    (err) => {
+      console.warn('Girl model error, using fallback');
+      createFallbackGirl();
+      modelLoaded();
+    }
+  );
+  
+  // Создаем записку (не загружаем)
+  createNote();
+  modelLoaded();
+  
+  // Загрузка города
+  const cityTexture = textureLoader.load(
+    'assets/city/source/Low Poly Winter Scene.png',
+    () => console.log('City texture loaded'),
+    undefined,
+    () => console.warn('City texture failed')
+  );
+  
+  objLoader.load(
+    'assets/city/source/Low Poly Winter Scene.obj',
+    (geometry) => {
+      const material = new THREE.MeshStandardMaterial({
+        map: cityTexture,
+        roughness: 0.8
+      });
+      
+      cityScene = new THREE.Mesh(geometry, material);
+      cityScene.scale.set(0.5, 0.5, 0.5);
+      cityScene.position.set(0, -10, -20);
+      console.log('City model loaded');
+      modelLoaded();
+    },
+    undefined,
+    (err) => {
+      console.warn('City model error, using fallback');
+      createFallbackCity();
+      modelLoaded();
+    }
+  );
+  
+  // Загрузка космоса
+  gltfLoader.load(
+    'assets/space.glb',
+    (gltf) => {
+      spaceScene = gltf.scene;
+      spaceScene.scale.set(10, 10, 10);
+      spaceScene.visible = false;
+      console.log('Space scene loaded');
+      modelLoaded();
+    },
+    undefined,
+    (err) => {
+      console.warn('Space model error, using fallback');
+      createFallbackSpace();
+      modelLoaded();
+    }
+  );
+}
+
+function createFallbackGirl() {
+  const group = new THREE.Group();
+  
+  // Тело с градиентом
+  const bodyGeo = new THREE.CylinderGeometry(0.3, 0.4, 1.5, 16);
+  const positions = bodyGeo.attributes.position.array;
+  const colors = [];
+  
+  for (let i = 0; i < positions.length; i += 3) {
+    const y = positions[i + 1];
+    const hue = 0.9 - y * 0.3;
+    const color = new THREE.Color().setHSL(hue, 0.8, 0.6);
+    colors.push(color.r, color.g, color.b);
+  }
+  
+  bodyGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  
+  const bodyMat = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 0.7
+  });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 0.75;
+  body.castShadow = true;
+  
+  const headGeo = new THREE.SphereGeometry(0.25, 16, 16);
+  const headMat = new THREE.MeshStandardMaterial({ color: 0xffccaa });
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.y = 1.6;
+  head.castShadow = true;
+  
+  group.add(body, head);
+  girl = group;
+  girl.position.set(0, -0.5, 0);
+}
+
+function createNote() {
+  const group = new THREE.Group();
+  
+  // Конверт
+  const envelopeGeo = new THREE.BoxGeometry(0.5, 0.02, 0.35);
+  const envelopeMat = new THREE.MeshStandardMaterial({ 
+    color: 0xfff8dc,
+    emissive: 0xffd700,
+    emissiveIntensity: 0,
+    roughness: 0.5
+  });
+  const envelope = new THREE.Mesh(envelopeGeo, envelopeMat);
+  envelope.castShadow = true;
+  group.add(envelope);
+  
+  // Золотая печать
+  const sealGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.03, 16);
+  const sealMat = new THREE.MeshStandardMaterial({ 
+    color: 0xd4af37,
+    metalness: 0.9,
+    roughness: 0.1,
+    emissive: 0xffd700,
+    emissiveIntensity: 0.5
+  });
+  const seal = new THREE.Mesh(sealGeo, sealMat);
+  seal.rotation.x = Math.PI / 2;
+  seal.position.y = 0.025;
+  seal.castShadow = true;
+  group.add(seal);
+  
+  // Блестки на печати
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const sparkle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.015, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xffff00 })
+    );
+    sparkle.position.set(
+      Math.cos(angle) * 0.06,
+      0.035,
+      Math.sin(angle) * 0.06
+    );
+    group.add(sparkle);
+  }
+  
+  note = group;
+  note.position.set(0, 0.2, 0.8);
+}
+
+function createFallbackCity() {
+  cityScene = new THREE.Group();
+  
+  // Создаем красивый зимний город
+  for (let i = 0; i < 30; i++) {
+    const height = Math.random() * 5 + 1.5;
+    const width = Math.random() * 0.8 + 0.4;
+    const buildingGeo = new THREE.BoxGeometry(width, height, width);
+    const hue = 0.6 + Math.random() * 0.1;
+    const buildingMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().setHSL(hue, 0.4, 0.25),
+      emissive: new THREE.Color().setHSL(0.15, 1, 0.3),
+      emissiveIntensity: Math.random() * 0.4 + 0.1,
+      roughness: 0.8
+    });
+    const building = new THREE.Mesh(buildingGeo, buildingMat);
+    building.castShadow = true;
+    
+    const angle = (i / 30) * Math.PI * 2;
+    const radius = 7 + Math.random() * 4;
+    building.position.set(
+      Math.cos(angle) * radius,
+      height / 2,
+      Math.sin(angle) * radius
+    );
+    
+    // Окна
+    for (let j = 0; j < 5; j++) {
+      if (Math.random() > 0.3) {
+        const windowLight = new THREE.Mesh(
+          new THREE.BoxGeometry(0.1, 0.15, 0.01),
+          new THREE.MeshBasicMaterial({ color: 0xffeb3b })
+        );
+        windowLight.position.set(0, j * 0.6 - height/3, width/2 + 0.01);
+        building.add(windowLight);
+      }
+    }
+    
+    cityScene.add(building);
+  }
+  
+  // Елки
+  for (let i = 0; i < 10; i++) {
+    const tree = new THREE.Mesh(
+      new THREE.ConeGeometry(0.3, 0.8, 8),
+      new THREE.MeshStandardMaterial({ color: 0x2d5016 })
+    );
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 5 + Math.random() * 3;
+    tree.position.set(
+      Math.cos(angle) * radius,
+      0.4,
+      Math.sin(angle) * radius
+    );
+    cityScene.add(tree);
+  }
+  
+  cityScene.position.set(0, -10, -20);
+}
+
+function createFallbackSpace() {
+  spaceScene = new THREE.Group();
+  
+  for (let i = 0; i < 2000; i++) {
+    const size = Math.random() * 0.15 + 0.04;
+    const star = new THREE.Mesh(
+      new THREE.SphereGeometry(size, 6, 6),
+      new THREE.MeshBasicMaterial({ 
+        color: new THREE.Color().setHSL(0.6, 0.2, Math.random() * 0.5 + 0.5)
+      })
+    );
+    star.position.set(
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 200
+    );
+    spaceScene.add(star);
+  }
+  
+  spaceScene.visible = false;
+}
+
+function modelLoaded() {
+  modelsLoaded++;
+  loadingDiv.textContent = `Загрузка... ${modelsLoaded}/${totalModels}`;
+  
+  if (modelsLoaded === totalModels) {
+    setTimeout(() => {
+      startScreen.style.transition = "opacity 1s";
+      startScreen.style.opacity = "0";
+      setTimeout(() => {
+        startScreen.remove();
+        init();
+      }, 1000);
+    }, 500);
+  }
+}
+
+
+// ========== АУДИО СИСТЕМА ==========
+
+function initAudio() {
+  audio = new Audio('assets/song.mp3');
+  audio.loop = true;
+  audio.volume = 0.6;
+  
+  // Предзагрузка
+  audio.load();
+  
+  audio.addEventListener('canplaythrough', () => {
+    audioLoaded = true;
+    console.log('Музыка загружена и готова к воспроизведению');
+  });
+  
+  audio.addEventListener('error', (e) => {
+    console.warn('Ошибка загрузки музыки:', e);
+    // Показываем уведомление, но продолжаем без музыки
+    console.log('Продолжаем без музыки');
+  });
+  
+  // Подключаем кнопки
+  const playBtn = document.getElementById('play-btn');
+  const pauseBtn = document.getElementById('pause-btn');
+  const volumeUp = document.getElementById('volume-up');
+  const volumeDown = document.getElementById('volume-down');
+  
+  if (playBtn && audio) {
+    playBtn.onclick = () => {
+      if (audioLoaded) {
+        audio.play().catch(e => {
+          console.log('Автовоспроизведение заблокировано, нужно взаимодействие пользователя');
+          // Просим пользователя нажать кнопку еще раз
+          playBtn.textContent = '▶️ Нажми еще раз';
+        });
+        document.getElementById('music-controls').style.opacity = '1';
+      }
+    };
+  }
+  
+  if (pauseBtn && audio) {
+    pauseBtn.onclick = () => {
+      audio.pause();
+    };
+  }
+  
+  if (volumeUp && audio) {
+    volumeUp.onclick = () => {
+      audio.volume = Math.min(1, audio.volume + 0.1);
+      console.log('Громкость:', audio.volume);
+    };
+  }
+  
+  if (volumeDown && audio) {
+    volumeDown.onclick = () => {
+      audio.volume = Math.max(0, audio.volume - 0.1);
+      console.log('Громкость:', audio.volume);
+    };
+  }
+}
+
+function startMusic() {
+  if (!musicStarted && audio && audioLoaded) {
+    audio.play().catch(e => {
+      console.log('Автовоспроизведение заблокировано браузером');
+      // Показываем кнопку play
+      document.getElementById('play-btn').style.display = 'flex';
+    });
+    musicStarted = true;
+  }
+}
+
+
+
+
+// ========== ИНИЦИАЛИЗАЦИЯ СЦЕНЫ ==========
+
+function init() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000510);
+  scene.fog = new THREE.Fog(0x000510, 5, 40);
+
+  camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1000);
+  camera.position.set(0, 1.5, 5);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  // Освещение
+  const ambientLight = new THREE.AmbientLight(0x4a5f88, 0.5);
+  scene.add(ambientLight);
+
+  const mainLight = new THREE.DirectionalLight(0xaaddff, 0.8);
+  mainLight.position.set(5, 10, 5);
+  mainLight.castShadow = true;
+  mainLight.shadow.mapSize.width = 2048;
+  mainLight.shadow.mapSize.height = 2048;
+  scene.add(mainLight);
+
+  const fillLight = new THREE.DirectionalLight(0xff9966, 0.3);
+  fillLight.position.set(-5, 3, -3);
+  scene.add(fillLight);
+
+  const magicLight = new THREE.PointLight(0xffd700, 3, 10);
+  magicLight.position.set(0, 0.5, 0.8);
+  scene.add(magicLight);
+
+  // Добавление моделей
+  if (girl) scene.add(girl);
+  if (note) scene.add(note);
+  if (cityScene) scene.add(cityScene);
+  if (spaceScene) scene.add(spaceScene);
+
+  createGround();
+  createVortex();
+  createMagicParticles();
+
+  progressDiv.style.opacity = "1";
+  progressDiv.textContent = "Письмо светится магией... ✨";
+  
+  animate();
+}
+
+function createGround() {
+  const groundGeo = new THREE.PlaneGeometry(30, 30);
+  const groundMat = new THREE.MeshStandardMaterial({ 
+    color: 0x1a2332,
+    roughness: 0.9
+  });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.5;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  
+  // Камни
+  for (let i = 0; i < 10; i++) {
+    const rockGeo = new THREE.DodecahedronGeometry(Math.random() * 0.4 + 0.2, 0);
+    const rockMat = new THREE.MeshStandardMaterial({ 
+      color: 0x3a3a3a,
+      roughness: 1
+    });
+    const rock = new THREE.Mesh(rockGeo, rockMat);
+    rock.position.set(
+      (Math.random() - 0.5) * 5,
+      -0.3,
+      (Math.random() - 0.5) * 4 + 0.5
+    );
+    rock.rotation.set(
+      Math.random() * Math.PI,
+      Math.random() * Math.PI,
+      Math.random() * Math.PI
+    );
+    rock.castShadow = true;
+    scene.add(rock);
+  }
+}
+
+function createVortex() {
+  for (let i = 0; i < 500; i++) {
+    const hue = (i / 500) * 0.3 + 0.5;
+    const particle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05, 8, 8),
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color().setHSL(hue, 1, 0.6),
+        transparent: true,
+        opacity: 0.85
+      })
+    );
+    particle.visible = false;
+    scene.add(particle);
+    vortexParticles.push(particle);
+  }
+}
+
+function createMagicParticles() {
+  for (let i = 0; i < 150; i++) {
+    const particle = new THREE.Mesh(
+      new THREE.SphereGeometry(0.04, 8, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xffd700,
+        transparent: true,
+        opacity: 0
+      })
+    );
+    scene.add(particle);
+    magicParticles.push({
+      mesh: particle,
+      velocity: new THREE.Vector3(),
+      angle: (i / 150) * Math.PI * 2,
+      speed: Math.random() * 0.5 + 0.5
+    });
+  }
+}
+
+// ========== АНИМАЦИЯ ==========
+
+function animate() {
+  requestAnimationFrame(animate);
+  time += 0.016;
+
+  // Фаза 0: Начальная сцена
+  if (phase === 0) {
+    if (note) {
+      note.rotation.y = Math.sin(time * 2) * 0.3;
+      note.position.y = 0.2 + Math.sin(time * 3) * 0.05;
+      
+      if (note.children[0]) {
+        note.children[0].material.emissiveIntensity = Math.sin(time * 4) * 0.4 + 0.4;
+      }
+    }
+    
+    magicParticles.forEach((p, i) => {
+      const angle = p.angle + time * 2 * p.speed;
+      const radius = 0.5 + Math.sin(time * 3 + i * 0.1) * 0.1;
+      p.mesh.position.set(
+        Math.cos(angle) * radius,
+        0.3 + Math.sin(time * 3 + i * 0.1) * 0.15,
+        0.8 + Math.sin(angle) * radius
+      );
+      p.mesh.material.opacity = Math.sin(time * 4 + i) * 0.4 + 0.5;
+    });
+    
+    if (time > 3) {
+      phase = 1;
+      progressDiv.innerHTML = "📨 <span style='color:#ff6b9d;text-shadow:0 0 10px #ff6b9d'>Девушка берет волшебное письмо...</span> 📨";
+    }
+  }
+
+  // Фаза 1: Письмо к девушке
+  else if (phase === 1) {
+    if (note) {
+      note.position.y += 0.025;
+      note.position.z += (0.1 - note.position.z) * 0.05;
+      note.rotation.x += 0.02;
+    }
+    
+    camera.position.z += (4 - camera.position.z) * 0.02;
+    camera.position.y += (1.3 - camera.position.y) * 0.02;
+    
+    magicParticles.forEach(p => {
+      p.mesh.position.y += 0.02;
+    });
+    
+    if (note && note.position.y > 1.2) {
+      phase = 2;
+      progressDiv.innerHTML = "🚀 <span style='color:#4fc3f7;text-shadow:0 0 10px #4fc3f7'>Запуск в звёздное путешествие!</span> ✨";
+      // Запускаем музыку
+      startMusic();
+    }
+  }
+
+  // Фаза 2: Полет в космос
+  else if (phase === 2) {
+    if (spaceScene) {
+      spaceScene.visible = true;
+      spaceScene.rotation.y += 0.002;
+      spaceScene.rotation.x += 0.001;
+    }
+    
+    scene.fog.far += 3;
+    scene.background.lerp(new THREE.Color(0x000020), 0.02);
+    
+    if (girl) {
+      girl.position.z -= 0.18;
+      girl.rotation.y += 0.04;
+      girl.position.y += 0.01;
+    }
+    
+    if (note) {
+      note.position.z -= 0.18;
+      note.rotation.x += 0.06;
+      note.rotation.y += 0.04;
+    }
+    
+    camera.position.z -= 0.18;
+    camera.position.y += 0.03;
+    
+    vortexParticles.forEach((p, i) => {
+      p.visible = true;
+      const angle = (i / vortexParticles.length) * Math.PI * 2 + time * 3;
+      const radius = 2.5 + Math.sin(time * 2 + i * 0.1) * 0.8;
+      const height = (i / vortexParticles.length) * 12;
+      
+      p.position.set(
+        Math.cos(angle) * radius,
+        height + time * 2.5,
+        camera.position.z - 12 + Math.sin(angle) * radius
+      );
+    });
+    
+    if (time > 9) {
+      phase = 3;
+      progressDiv.innerHTML = "🌀 <span style='color:#ffd700;text-shadow:0 0 10px #ffd700'>Вихрь новогодней магии усиливается!</span> ❄️";
+    }
+  }
+
+  // Фаза 3: Сильное вращение в вихре
+  else if (phase === 3) {
+    if (girl) {
+      girl.rotation.y += 0.12;
+      girl.rotation.x += 0.03;
+      girl.rotation.z += 0.02;
+    }
+    
+    if (note) {
+      note.rotation.y += 0.15;
+      note.rotation.x += 0.1;
+    }
+    
+    camera.rotation.z += 0.015;
+    camera.rotation.x += 0.005;
+    
+    vortexParticles.forEach((p, i) => {
+      const angle = (i / vortexParticles.length) * Math.PI * 2 + time * 6;
+      const radius = 2;
+      
+      p.position.set(
+        camera.position.x + Math.cos(angle) * radius,
+        camera.position.y + Math.sin(angle * 3) * radius,
+        camera.position.z - 8 + Math.sin(angle) * radius
+      );
+    });
+    
+    // Случайные поздравления
+    if (Math.random() > 0.98) {
+      const messages = [
+        "Каждая снежинка несёт чудо! ❄️",
+        "Время загадывать желания! 💫",
+        "Магия уже с тобой! ✨",
+        "Новый год стучится в сердце! 🎁"
+      ];
+      progressDiv.innerHTML = "🌟 " + messages[Math.floor(Math.random() * messages.length)] + " 🌟";
+    }
+    
+    if (time > 13) {
+      phase = 4;
+      progressDiv.innerHTML = "🏙️ <span style='color:#69f0ae;text-shadow:0 0 10px #69f0ae'>Волшебный город появляется из снегов!</span> 🎄";
+    }
+  }
+
+  // Фаза 4: Появление города
+  else if (phase === 4) {
+    if (cityScene) {
+      cityScene.position.y += (0 - cityScene.position.y) * 0.04;
+      cityScene.position.z += (-5 - cityScene.position.z) * 0.04;
+      cityScene.rotation.y += 0.008;
+    }
+    
+    if (girl) {
+      girl.position.set(
+        girl.position.x * 0.95,
+        0,
+        -3
+      );
+      girl.rotation.x += (0 - girl.rotation.x) * 0.08;
+      girl.rotation.z += (0 - girl.rotation.z) * 0.08;
+      girl.rotation.y += 0.03;
+    }
+    
+    if (note) {
+      note.position.y += (1.5 - note.position.y) * 0.05;
+      note.position.z = -2.5;
+      note.rotation.x += (0 - note.rotation.x) * 0.1;
+    }
+    
+    camera.position.y += (2.5 - camera.position.y) * 0.04;
+    camera.position.z += (5 - camera.position.z) * 0.04;
+    camera.rotation.z *= 0.92;
+    camera.rotation.x *= 0.92;
+    
+    vortexParticles.forEach(p => {
+      p.material.opacity -= 0.006;
+      if (p.material.opacity <= 0) p.visible = false;
+    });
+    
+    if (spaceScene) {
+      spaceScene.traverse(child => {
+        if (child.material && child.material.opacity !== undefined) {
+          child.material.transparent = true;
+          child.material.opacity -= 0.01;
+        }
+      });
+    }
+    
+    scene.background.lerp(new THREE.Color(0x0a1520), 0.03);
+    
+    if (time > 18) {
+      phase = 5;
+      progressDiv.innerHTML = `
+        <div style="text-align: center;">
+          <div style="font-size: 32px; margin-bottom: 10px; color:#ff3366; text-shadow:0 0 20px #ff3366;">
+            С НОВЫМ 2026 ГОДОМ!
+          </div>
+          <div style="font-size: 22px; color:#4fc3f7; text-shadow:0 0 15px #4fc3f7;">
+            Пусть каждый миг будет волшебным! ✨
+          </div>
+          <div style="font-size: 18px; margin-top: 10px; color:#ffd700;">
+            Мечты сбываются, а счастье множится! 💫🎁🎆
+          </div>
+        </div>
+      `;
+      // Показываем кнопки управления музыкой
+      document.getElementById('music-controls').style.opacity = '1';
+    }
+  }
+
+  // Фаза 5: Финальная сцена
+  else if (phase === 5) {
+    if (cityScene) {
+      cityScene.rotation.y += 0.004;
+      
+      // Яркое мерцание окон
+      cityScene.traverse(child => {
+        if (child.isMesh && child.material.emissive) {
+          child.material.emissiveIntensity = 0.3 + Math.sin(time * 10) * 0.3;
+        }
+      });
+    }
+    
+    if (girl) {
+      girl.rotation.y += 0.015;
+      girl.position.y = Math.sin(time * 1.5) * 0.05;
+    }
+    
+    if (note) {
+      note.rotation.y += 0.02;
+      note.position.y = 1.5 + Math.sin(time * 2) * 0.03;
+    }
+    
+    // Плавное движение камеры
+    camera.position.x += Math.sin(time * 0.4) * 0.015;
+    camera.position.y += Math.cos(time * 0.3) * 0.01;
+    
+    // Медленно увеличиваем громкость в финале
+    if (audio && audio.volume < 0.8) {
+      audio.volume += 0.0005;
+    }
+    
+    // Случайные поздравления в финале
+    if (Math.random() > 0.985) {
+      const finalMessages = [
+        "Пусть Новый Год принесёт море улыбок! 😊",
+        "Здоровья, счастья и исполнения желаний! 💝",
+        "Пусть удача будет верной спутницей! 🍀",
+        "Светлых дней и тёплых вечеров! 🏮",
+        "Процветания и новых достижений! 🏆"
+      ];
+      const msg = finalMessages[Math.floor(Math.random() * finalMessages.length)];
+      progressDiv.innerHTML = `
+        <div style="text-align: center; animation: glow 2s infinite;">
+          <div style="font-size: 24px; color:#69f0ae;">${msg}</div>
+        </div>
+      `;
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+
+</script>
+
+<div id="music-controls">
+  <button class="music-btn" id="play-btn" style="display: none">▶️</button>
+  <button class="music-btn" id="pause-btn">⏸️</button>
+  <button class="music-btn" id="volume-up">🔊</button>
+  <button class="music-btn" id="volume-down">🔉</button>
+
+</div>
+</body>
+</html>
