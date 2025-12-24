@@ -337,7 +337,7 @@ let girl, note, cityScene, spaceScene;
 let phase = 0, time = 0;
 let vortexParticles = [], magicParticles = [];
 let modelsLoaded = 0;
-const totalModels = 3;
+const totalModels = 4;
 
 // ДОБАВЬТЕ ЭТИ 3 СТРОКИ ЗДЕСЬ ▼
 let audio = null;
@@ -651,61 +651,63 @@ function initAudio() {
   
   audio.addEventListener('error', (e) => {
     console.warn('Ошибка загрузки музыки:', e);
-    // Показываем уведомление, но продолжаем без музыки
     console.log('Продолжаем без музыки');
   });
   
-  // Подключаем кнопки
+  // Получаем элементы
+  const musicControls = document.getElementById('music-controls');
   const playBtn = document.getElementById('play-btn');
   const pauseBtn = document.getElementById('pause-btn');
   const volumeUp = document.getElementById('volume-up');
   const volumeDown = document.getElementById('volume-down');
-  
-  if (playBtn && audio) {
-    playBtn.onclick = () => {
-      if (audioLoaded) {
-        audio.play().catch(e => {
-          console.log('Автовоспроизведение заблокировано, нужно взаимодействие пользователя');
-          // Просим пользователя нажать кнопку еще раз
-          playBtn.textContent = '▶️ Нажми еще раз';
-        });
-        document.getElementById('music-controls').style.opacity = '1';
-      }
-    };
-  }
-  
-  if (pauseBtn && audio) {
-    pauseBtn.onclick = () => {
+
+  // Показываем панель управления сразу (или в нужный момент — можно позже)
+  musicControls.style.opacity = '1';
+
+  // Универсальная функция переключения play/pause
+  function togglePlayPause() {
+    if (audio.paused) {
+      audio.play().catch(e => {
+        console.log('Воспроизведение заблокировано:', e);
+        alert('Нажмите ещё раз для запуска музыки');
+      });
+      playBtn.style.display = 'none';
+      pauseBtn.style.display = 'flex';
+    } else {
       audio.pause();
-    };
+      playBtn.style.display = 'flex';
+      pauseBtn.style.display = 'none';
+    }
   }
+
+  // Назначаем одну и ту же функцию на обе кнопки
+  playBtn.onclick = togglePlayPause;
+  pauseBtn.onclick = togglePlayPause;
+
+  // Громкость
+  volumeUp.onclick = () => {
+    audio.volume = Math.min(1, audio.volume + 0.1);
+  };
   
-  if (volumeUp && audio) {
-    volumeUp.onclick = () => {
-      audio.volume = Math.min(1, audio.volume + 0.1);
-      console.log('Громкость:', audio.volume);
-    };
-  }
-  
-  if (volumeDown && audio) {
-    volumeDown.onclick = () => {
-      audio.volume = Math.max(0, audio.volume - 0.1);
-      console.log('Громкость:', audio.volume);
-    };
-  }
+  volumeDown.onclick = () => {
+    audio.volume = Math.max(0, audio.volume - 0.1);
+  };
+
+  // Изначально показываем кнопку паузы (если музыка будет играть)
+  playBtn.style.display = 'none';
+  pauseBtn.style.display = 'flex';
 }
 
 function startMusic() {
-  if (!musicStarted && audio && audioLoaded) {
-    audio.play().catch(e => {
-      console.log('Автовоспроизведение заблокировано браузером');
-      // Показываем кнопку play
-      document.getElementById('play-btn').style.display = 'flex';
-    });
-    musicStarted = true;
-  }
+  if (audio && !audio.paused) return; // Уже играет
+  
+  audio.play().catch(e => {
+    console.log('Автовоспроизведение заблокировано браузером');
+    // Показываем кнопку play, если не видна
+    document.getElementById('play-btn').style.display = 'flex';
+    document.getElementById('pause-btn').style.display = 'none';
+  });
 }
-
 
 
 
@@ -1107,7 +1109,7 @@ window.addEventListener('resize', () => {
 </script>
 
 <div id="music-controls">
-  <button class="music-btn" id="play-btn" style="display: none">▶️</button>
+  <button class="music-btn" id="play-btn">▶️</button>
   <button class="music-btn" id="pause-btn">⏸️</button>
   <button class="music-btn" id="volume-up">🔊</button>
   <button class="music-btn" id="volume-down">🔉</button>
