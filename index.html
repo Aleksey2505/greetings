@@ -350,6 +350,10 @@ const textureLoader = new THREE.TextureLoader();
 const objLoader = new OBJLoader();
 const gltfLoader = new GLTFLoader();
 const gltfLoaderGirl = new THREE.GLTFLoader();
+
+const gltfLoaderCity = new THREE.GLTFLoader();
+
+
 // ========== ФУНКЦИИ ЗАГРУЗКИ ==========
 
 startBtn.onclick = () => {
@@ -399,34 +403,33 @@ function loadAssets() {
   modelLoaded();
   
   // Загрузка города
-  const cityTexture = textureLoader.load(
-    'assets/city/source/Low Poly Winter Scene.png',
-    () => console.log('City texture loaded'),
-    undefined,
-    () => console.warn('City texture failed')
-  );
-  
-  objLoader.load(
-    'assets/city/source/Low Poly Winter Scene.obj',
-    (geometry) => {
-      const material = new THREE.MeshStandardMaterial({
-        map: cityTexture,
-        roughness: 0.8
-      });
-      
-      cityScene = new THREE.Mesh(geometry, material);
-      cityScene.scale.set(0.5, 0.5, 0.5);
-      cityScene.position.set(0, -10, -20);
-      console.log('City model loaded');
-      modelLoaded();
-    },
-    undefined,
-    (err) => {
-      console.warn('City model error, using fallback');
-      createFallbackCity();
-      modelLoaded();
-    }
-  );
+  const gltfLoaderCity = new THREE.GLTFLoader();
+
+gltfLoaderCity.load(
+  'assets/city.glb',  // путь к вашему новому файлу
+  (gltf) => {
+    cityScene = gltf.scene;
+    cityScene.scale.set(0.5, 0.5, 0.5);
+    cityScene.position.set(0, -10, -20);
+
+    // Тени и оптимизация
+    cityScene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    console.log('City GLB model loaded');
+    modelLoaded();
+  },
+  undefined,
+  (err) => {
+    console.warn('City GLB load error, using fallback');
+    createFallbackCity();
+    modelLoaded();
+  }
+);
   
   // Загрузка космоса
   gltfLoader.load(
