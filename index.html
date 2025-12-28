@@ -4,21 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>С Новым Годом ✨</title>
-  <style>
-
-
+   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+   
     body {
       overflow: hidden;
       background: #000;
       font-family: 'Arial', sans-serif;
     }
-    
+   
     #start {
       position: fixed;
       inset: 0;
@@ -26,118 +24,158 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, #0a0a2e 0%, #000 100%);
+      background: radial-gradient(circle at center, #1a0a3e 0%, #000 100%);
       z-index: 10;
-      animation: bgPulse 3s ease-in-out infinite;
+      animation: bgPulse 4s ease-in-out infinite;
     }
-    
+   
     @keyframes bgPulse {
-      0%, 100% { background: radial-gradient(circle at center, #0a0a2e 0%, #000 100%); }
-      50% { background: radial-gradient(circle at center, #1a1a3e 0%, #000 100%); }
+      0%, 100% { background: radial-gradient(circle at center, #1a0a3e 0%, #000 100%); }
+      50% { background: radial-gradient(circle at center, #2a1a4e 0%, #000 100%); }
     }
-    
+   
     button {
-      font-size: 26px;
-      padding: 25px 55px;
-      border-radius: 50px;
-      border: 3px solid #ffd700;
+      font-size: 28px;
+      padding: 30px 60px;
+      border-radius: 60px;
+      border: none;
       cursor: pointer;
-      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-      color: #000;
+      background: linear-gradient(135deg, #ff006e 0%, #8338ec 50%, #3a86ff 100%);
+      background-size: 200% 200%;
+      color: #fff;
       font-weight: bold;
-      box-shadow: 0 10px 50px rgba(255, 215, 0, 0.5),
-                  inset 0 1px 0 rgba(255,255,255,0.3);
-      transition: all 0.3s ease;
+      box-shadow: 0 15px 60px rgba(131, 56, 236, 0.6),
+                  inset 0 1px 0 rgba(255,255,255,0.4);
+      transition: all 0.4s ease;
       text-transform: uppercase;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       position: relative;
       overflow: hidden;
+      animation: gradientShift 3s ease infinite;
     }
-    
+   
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+   
     button::before {
-      content: '';
+      content: '✨';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
-      transform: rotate(45deg);
-      animation: buttonShine 3s linear infinite;
+      top: 50%;
+      left: -40px;
+      transform: translateY(-50%);
+      font-size: 24px;
+      animation: sparkleMove 2s ease-in-out infinite;
     }
-    
-    @keyframes buttonShine {
-      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+   
+    button::after {
+      content: '✨';
+      position: absolute;
+      top: 50%;
+      right: -40px;
+      transform: translateY(-50%);
+      font-size: 24px;
+      animation: sparkleMove 2s ease-in-out infinite reverse;
     }
-    
+   
+    @keyframes sparkleMove {
+      0%, 100% { opacity: 0; transform: translateY(-50%) scale(0.5); }
+      50% { opacity: 1; transform: translateY(-50%) scale(1.2); }
+    }
+   
     button:hover {
-      transform: scale(1.05) translateY(-2px);
-      box-shadow: 0 15px 70px rgba(255, 215, 0, 0.7),
-                  inset 0 1px 0 rgba(255,255,255,0.5);
+      transform: scale(1.08) translateY(-3px);
+      box-shadow: 0 20px 80px rgba(131, 56, 236, 0.9),
+                  inset 0 1px 0 rgba(255,255,255,0.6);
     }
-    
+   
+    button:active {
+      transform: scale(1.02) translateY(-1px);
+    }
+   
     #loading {
-      color: #ffd700;
-      font-size: 18px;
-      margin-top: 20px;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+      color: #8338ec;
+      font-size: 20px;
+      margin-top: 30px;
+      text-shadow: 0 0 30px rgba(131, 56, 236, 0.9);
       opacity: 0;
-      transition: opacity 0.3s;
-    }
-    
-    #progress {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #ffd700;
-      font-size: 22px;
-      font-weight: bold;
-      text-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
-                   0 0 40px rgba(255, 215, 0, 0.5);
-      z-index: 5;
-      opacity: 0;
-      transition: opacity 0.5s;
-      text-align: center;
+      transition: opacity 0.4s;
       letter-spacing: 2px;
     }
-    
-
-#music-controls {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-  display: flex;
-  gap: 10px;
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-
-.music-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: rgba(255, 215, 0, 0.2);
-  border: 2px solid #ffd700;
-  color: #ffd700;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(5px);
-  transition: all 0.3s;
-}
-
-.music-btn:hover {
-  background: rgba(255, 215, 0, 0.4);
-  transform: scale(1.1);
-}
-
-
-
+   
+    #progress {
+      position: fixed;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 24px;
+      font-weight: bold;
+      text-shadow: 0 0 25px rgba(255, 255, 255, 0.9),
+                   0 0 50px rgba(131, 56, 236, 0.6);
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.6s;
+      text-align: center;
+      letter-spacing: 3px;
+      max-width: 90%;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+   
+    #music-controls {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 100;
+      display: flex;
+      gap: 15px;
+      opacity: 0;
+      transition: opacity 0.6s;
+    }
+   
+    .music-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(131, 56, 236, 0.3);
+      border: 3px solid #8338ec;
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s;
+      padding: 0;
+      letter-spacing: 0;
+      box-shadow: 0 5px 25px rgba(131, 56, 236, 0.4);
+    }
+   
+    .music-btn:hover {
+      background: rgba(131, 56, 236, 0.6);
+      transform: scale(1.15) rotate(5deg);
+      box-shadow: 0 8px 35px rgba(131, 56, 236, 0.7);
+    }
+   
+    .music-btn:active {
+      transform: scale(1.05);
+    }
+   
+    @keyframes glow {
+      0%, 100% {
+        text-shadow: 0 0 25px rgba(255, 255, 255, 0.9),
+                     0 0 50px rgba(131, 56, 236, 0.6);
+      }
+      50% {
+        text-shadow: 0 0 40px rgba(255, 255, 255, 1),
+                     0 0 80px rgba(255, 0, 110, 0.8);
+      }
+    }
   </style>
 </head>
 <body>
@@ -331,27 +369,18 @@ const startBtn = document.getElementById("go");
 const startScreen = document.getElementById("start");
 const progressDiv = document.getElementById("progress");
 const loadingDiv = document.getElementById("loading");
-
 let scene, camera, renderer;
 let girl, note, cityScene, spaceScene;
 let phase = 0, time = 0;
-let vortexParticles = [], magicParticles = [];
+let vortexParticles = [], magicParticles = [], snowflakes = [];
 let modelsLoaded = 0;
 const totalModels = 4;
-
-// ДОБАВЬТЕ ЭТИ 3 СТРОКИ ЗДЕСЬ ▼
 let audio = null;
 let audioLoaded = false;
 let musicStarted = false;
-
-
-
-const textureLoader = new THREE.TextureLoader();
-const objLoader = new OBJLoader();
-const gltfLoader = new GLTFLoader();
-const gltfLoaderGirl = new THREE.GLTFLoader();
-
-const gltfLoaderCity = new THREE.GLTFLoader();
+const gltfLoader = new GLTFLoader(); // custom for space
+const gltfLoaderGirl = new THREE.GLTFLoader(); // standard for girl
+const gltfLoaderCity = new THREE.GLTFLoader(); // standard for city
 
 
 // ========== ФУНКЦИИ ЗАГРУЗКИ ==========
@@ -755,6 +784,7 @@ function init() {
   createGround();
   createVortex();
   createMagicParticles();
+  createSnowflakes();
 
   progressDiv.style.opacity = "1";
   progressDiv.textContent = "Письмо светится магией... ✨";
@@ -834,6 +864,34 @@ function createMagicParticles() {
   }
 }
 
+
+function createSnowflakes() {
+  for (let i = 0; i < 300; i++) {
+    const snowflake = new THREE.Mesh(
+      new THREE.SphereGeometry(0.03, 6, 6),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0
+      })
+    );
+    scene.add(snowflake);
+    snowflakes.push({
+      mesh: snowflake,
+      velocity: new THREE.Vector3(
+        (Math.random() - 0.5) * 0.02,
+        -Math.random() * 0.03 - 0.01,
+        (Math.random() - 0.5) * 0.02
+      ),
+      resetY: Math.random() * 10 + 8
+    });
+  }
+}
+// ===
+
+
+
+
 // ========== АНИМАЦИЯ ==========
 
 function animate() {
@@ -864,7 +922,7 @@ function animate() {
     
     if (time > 3) {
       phase = 1;
-      progressDiv.innerHTML = "📨 <span style='color:#ff6b9d;text-shadow:0 0 10px #ff6b9d'>Девушка берет волшебное письмо...</span> 📨";
+      progressDiv.innerHTML = "📨 <span style='color:#ff6b9d;text-shadow:0 0 10px #ff6b9d'>Волшебное письмо уносит в новогодний город</span> 📨";
     }
   }
 
@@ -1049,63 +1107,81 @@ function animate() {
   // Фаза 5: Финальная сцена
   else if (phase === 5) {
     if (cityScene) {
-      cityScene.rotation.y += 0.004;
-      
-      // Яркое мерцание окон
+      cityScene.rotation.y += 0.005;
+     
+      // Яркое праздничное мерцание
       cityScene.traverse(child => {
         if (child.isMesh && child.material.emissive) {
-          child.material.emissiveIntensity = 0.3 + Math.sin(time * 10) * 0.3;
+          child.material.emissiveIntensity = 0.4 + Math.sin(time * 12 + child.id * 0.1) * 0.4;
         }
       });
     }
-    
+   
     if (girl) {
-      girl.rotation.y += 0.015;
-      girl.position.y = Math.sin(time * 1.5) * 0.05;
+      girl.rotation.y += 0.018;
+      girl.position.y = Math.sin(time * 1.8) * 0.06;
     }
-    
+   
     if (note) {
-      note.rotation.y += 0.02;
-      note.position.y = 1.5 + Math.sin(time * 2) * 0.03;
+      note.rotation.y += 0.025;
+      note.position.y = 1.6 + Math.sin(time * 2.2) * 0.04;
+     
+      // Радужное свечение письма
+      if (note.children[0]) {
+        const hue = (time * 0.2) % 1;
+        note.children[0].material.emissive.setHSL(hue, 1, 0.5);
+      }
     }
-    
+   
     // Плавное движение камеры
-    camera.position.x += Math.sin(time * 0.4) * 0.015;
-    camera.position.y += Math.cos(time * 0.3) * 0.01;
-    
-    // Медленно увеличиваем громкость в финале
-    if (audio && audio.volume < 0.8) {
-      audio.volume += 0.0005;
+    camera.position.x += Math.sin(time * 0.5) * 0.018;
+    camera.position.y += Math.cos(time * 0.35) * 0.012;
+    camera.lookAt(0, 1, -3);
+   
+    // Снегопад
+    snowflakes.forEach(s => {
+      s.mesh.material.opacity = Math.min(s.mesh.material.opacity + 0.01, 0.9);
+      s.mesh.position.add(s.velocity);
+     
+      if (s.mesh.position.y < -2) {
+        s.mesh.position.y = s.resetY;
+        s.mesh.position.x = (Math.random() - 0.5) * 20;
+        s.mesh.position.z = (Math.random() - 0.5) * 20 - 3;
+      }
+    });
+   
+    // Плавное усиление музыки
+    if (audio && audio.volume < 0.85) {
+      audio.volume += 0.0003;
     }
-    
-    // Случайные поздравления в финале
-    if (Math.random() > 0.985) {
+   
+    // Разнообразные праздничные поздравления
+    if (Math.random() > 0.983) {
       const finalMessages = [
-        "Пусть Новый Год принесёт море улыбок! 😊",
-        "Здоровья, счастья и исполнения желаний! 💝",
-        "Пусть удача будет верной спутницей! 🍀",
-        "Светлых дней и тёплых вечеров! 🏮",
-        "Процветания и новых достижений! 🏆"
+        { text: "💐 Пусть твоя жизнь будет наполнена красотой, вдохновением и мелодиями, от которых сердце замирает! 💐", color: "#e0b0ff" },
+{ text: "📚 Желаю, чтобы все экзамены сдавались на «отлично» так же легко, как ты подпеваешь любимым песням! 📚", color: "#87ceeb" },
+{ text: "✨ Пусть грядущий год принесет тебе столько же восхищения, сколько ты даришь окружающим. ✨", color: "#ffb6c1" },
+{ text: "🩺 Желаю тебе не только профессиональных успехов, но и море личного, тихого счастья. 🩺", color: "#98fb98" },
+{ text: "🎤 Пусть в твоей жизни будет много музыки, танцев и моментов, таких же прекрасных, как треки Лазарева! 🎤", color: "#ffa07a" },
+{ text: "💌 Желаю тебе море любви, поддержки и исполнения самых сокровенных желаний! 💌", color: "#dda0dd" }
       ];
-      const msg = finalMessages[Math.floor(Math.random() * finalMessages.length)];
+      const msgObj = finalMessages[Math.floor(Math.random() * finalMessages.length)];
       progressDiv.innerHTML = `
         <div style="text-align: center; animation: glow 2s infinite;">
-          <div style="font-size: 24px; color:#69f0ae;">${msg}</div>
+          <div style="font-size: 26px; color:${msgObj.color}; text-shadow:0 0 25px ${msgObj.color}">${msgObj.text}</div>
         </div>
       `;
     }
   }
-
   renderer.render(scene, camera);
 }
-
+// ==================== АДАПТИВНОСТЬ ====================
 window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 });
-
-
 </script>
 
 <div id="music-controls">
