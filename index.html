@@ -220,7 +220,7 @@
   #progress {
     font-size: 16px;
     padding: 10px 12px;
-    bottom: 80px;
+    bottom: 40px;
   }
   
   .music-btn {
@@ -260,10 +260,13 @@
   #progress {
     font-size: 18px;
     padding: 12px 15px;
-    bottom: 70px;
+    bottom: 40px;
     letter-spacing: 1px;
-    max-width: 85%; /* Еще уже на мобильных */
-    line-height: 1.3; /* Увеличиваем межстрочный интервал */
+    max-width: 96%;
+
+    max-height: 32vh;
+    overflow: hidden; /* Еще уже на мобильных */
+    line-height: 1.15; /* Увеличиваем межстрочный интервал */
   }
 }
 
@@ -271,7 +274,7 @@
   #progress {
     font-size: 16px;
     padding: 10px 12px;
-    bottom: 80px;
+    bottom: 40px;
     max-width: 80%; /* Еще уже на очень маленьких экранах */
     line-height: 1.4;
   }
@@ -280,7 +283,7 @@
 /* Для пейзажной ориентации на мобильных */
 @media (max-width: 768px) and (orientation: landscape) {
   #progress {
-    bottom: 60px;
+    bottom: 40px;
     max-width: 70%; /* Уже в ландшафте */
     font-size: 16px;
     padding: 8px 10px;
@@ -1249,35 +1252,38 @@ function animate() {
   // Адаптивное финальное сообщение
   const isMobile = window.innerWidth <= 768;
   progressDiv.innerHTML = `
-    <div style="text-align: center; max-width: 95%; margin: 0 auto; padding: ${isMobile ? '8px' : '12px'};">
-      <div style="
-        font-size: ${isMobile ? '20px' : '28px'};  // Уменьшил с 24/32 до 20/28
-        margin-bottom: ${isMobile ? '4px' : '8px'}; 
-        color:#ff3366; 
-        text-shadow:0 0 15px #ff3366;  // Уменьшил свечение
-        line-height: 1.2;
-      ">
-        С НОВЫМ 2026 ГОДОМ!
-      </div>
-      <div style="
-        font-size: ${isMobile ? '16px' : '20px'};  // Уменьшил с 18/22 до 16/20
-        color:#4fc3f7; 
-        text-shadow:0 0 10px #4fc3f7;  // Уменьшил свечение
-        line-height: 1.3;
-        margin-bottom: ${isMobile ? '6px' : '8px'};
-      ">
-        Пусть каждый миг будет волшебным! ✨
-      </div>
-      <div style="
-        font-size: ${isMobile ? '14px' : '16px'};  // Уменьшил с 16/18 до 14/16
-        color:#ffd700;
-        line-height: 1.2;
-        opacity: 0.9;
-      ">
-        Мечты сбываются, а счастье множится! 💫🎁🎆
-      </div>
-    </div>
-  `;
+<div style="
+  max-width: 96%;
+  margin: 0 auto;
+  padding: 6px 14px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+">
+  <div style="
+    font-size:${isMobile ? '15px' : '20px'};
+    line-height:1.15;
+    color:${msgObj.color};
+    text-shadow:0 0 8px ${msgObj.color};
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  ">
+    ${msgObj.text}
+  </div>
+
+  <div style="
+    font-size:${isMobile ? '13px' : '15px'};
+    color:#ffd700;
+    opacity:.85;
+    margin-top:2px;
+  ">
+    ✨ С Новым Годом! ✨
+  </div>
+</div>
+`;
+
   // Показываем кнопки управления музыкой
   document.getElementById('music-controls').style.opacity = '1';
 }
@@ -1285,7 +1291,6 @@ function animate() {
 
   // Фаза 5: Финальная сцена
   // Фаза 5: Финальная сцена
-// Фаза 5: Финальная сцена
 else if (phase === 5) {
   if (cityScene) {
     cityScene.rotation.y += 0.005;
@@ -1338,35 +1343,41 @@ else if (phase === 5) {
     
     // Определяем размер шрифта в зависимости от ширины экрана
     const isMobile = window.innerWidth <= 768;
-    const fontSize = isMobile ? '15px' : '20px'; // Еще меньше шрифт
-    const lineHeight = isMobile ? '1.25' : '1.3'; // Более компактный межстрочный интервал
-    const padding = isMobile ? '6px 10px' : '8px 15px'; // Меньше отступы
-    const marginBottom = isMobile ? '3px' : '5px';
+    const fontSize = isMobile ? '16px' : '22px'; // Уменьшил размер шрифта
+    const lineHeight = isMobile ? '1.3' : '1.4';
+    const padding = isMobile ? '8px 12px' : '12px 18px';
+    const marginBottom = isMobile ? '5px' : '10px';
     
     progressDiv.innerHTML = `
       <div style="
         text-align: center; 
         padding: ${padding};
-        max-width: ${isMobile ? '92%' : '95%'}; // Шире на мобильных
+        max-width: ${isMobile ? '85%' : '90%'};
         margin: 0 auto;
         background: rgba(0, 0, 0, 0.5);
-        border-radius: 12px; // Меньше скругление
-        backdrop-filter: blur(8px);
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        min-height: auto; // Убираем минимальную высоту
       ">
         <div style="
           font-size: ${fontSize};
           line-height: ${lineHeight};
           color: ${msgObj.color}; 
-          text-shadow: 0 0 8px ${msgObj.color}; // Меньше свечение
+          text-shadow: 0 0 10px ${msgObj.color};
           word-wrap: break-word;
           overflow-wrap: break-word;
           white-space: normal;
           margin-bottom: ${marginBottom};
-          padding: 0; // Убираем внутренние отступы
         ">
           ${msgObj.text}
+        </div>
+        <div style="
+          font-size: ${isMobile ? '14px' : '16px'};
+          color: #ffd700;
+          opacity: 0.8;
+          margin-top: 5px;
+        ">
+          ✨ С Новым Годом! ✨
         </div>
       </div>
     `;
