@@ -244,6 +244,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script>
 // ========== КЛАССЫ ЗАГРУЗЧИКОВ ==========
 
@@ -433,6 +434,7 @@ const totalModels = 4;
 let audio = null;
 let audioLoaded = false;
 let musicStarted = false;
+let snowStarted = false;
 const gltfLoader = new GLTFLoader(); // custom for space
 const gltfLoaderGirl = new THREE.GLTFLoader(); // standard for girl
 const gltfLoaderCity = new THREE.GLTFLoader(); // standard for city
@@ -927,9 +929,17 @@ function createSnowflakes() {
       new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0
+        opacity: 0 // изначально полностью прозрачные
       })
     );
+    
+    // Распределяем снежинки по всей сцене
+    snowflake.position.set(
+      (Math.random() - 0.5) * 30,  // шире по X
+      Math.random() * 20 + 5,       // выше по Y
+      (Math.random() - 0.5) * 30 - 10 // глубже по Z
+    );
+    
     scene.add(snowflake);
     snowflakes.push({
       mesh: snowflake,
@@ -944,7 +954,22 @@ function createSnowflakes() {
 }
 // ===
 
-
+function startSnowfall() {
+  if (snowStarted) return; // Чтобы не запускать несколько раз
+  
+  snowStarted = true;
+  console.log("Снегопад начался! ❄️");
+  
+  // Мягко появляются снежинки
+  snowflakes.forEach(s => {
+    // Мягкое появление
+    gsap.to(s.mesh.material, {
+      opacity: 0.8 + Math.random() * 0.2,
+      duration: 2,
+      ease: "power2.out"
+    });
+  });
+}
 
 
 // ========== АНИМАЦИЯ ==========
@@ -1030,6 +1055,9 @@ function animate() {
     camera.position.z -= 0.18;
     camera.position.y += 0.03;
     
+    // ЗАПУСК СНЕГОПАДА
+    if (!snowStarted) startSnowfall();
+    
     vortexParticles.forEach((p, i) => {
       p.visible = true;
       const angle = (i / vortexParticles.length) * Math.PI * 2 + time * 3;
@@ -1075,6 +1103,18 @@ function animate() {
         camera.position.z - 8 + Math.sin(angle) * radius
       );
     });
+    
+    // Добавляем эффект, что снег кружится в вихре
+    if (snowStarted) {
+      snowflakes.forEach(s => {
+        // Добавляем вращательное движение
+        s.velocity.x += Math.sin(time * 2) * 0.001;
+        s.velocity.z += Math.cos(time * 2) * 0.001;
+        
+        // Ускоряем падение
+        s.velocity.y = -Math.random() * 0.05 - 0.02;
+      });
+    }
     
     // Случайные поздравления
     if (Math.random() > 0.98) {
@@ -1137,19 +1177,46 @@ function animate() {
       });
     }
     
+    // Возвращаем снегу нормальное поведение
+    if (snowStarted) {
+      snowflakes.forEach(s => {
+        s.velocity.x = (Math.random() - 0.5) * 0.02;
+        s.velocity.y = -Math.random() * 0.03 - 0.01;
+        s.velocity.z = (Math.random() - 0.5) * 0.02;
+      });
+    }
+    
     scene.background.lerp(new THREE.Color(0x0a1520), 0.03);
     
     if (time > 18) {
       phase = 5;
+      // Адаптивное финальное сообщение
+      const isMobile = window.innerWidth <= 768;
       progressDiv.innerHTML = `
-        <div style="text-align: center;">
-          <div style="font-size: 32px; margin-bottom: 10px; color:#ff3366; text-shadow:0 0 20px #ff3366;">
+        <div style="text-align: center; max-width: 95%; margin: 0 auto; padding: 10px;">
+          <div style="
+            font-size: ${isMobile ? '24px' : '32px'}; 
+            margin-bottom: ${isMobile ? '5px' : '10px'}; 
+            color:#ff3366; 
+            text-shadow:0 0 20px #ff3366;
+            line-height: 1.2;
+          ">
             С НОВЫМ 2026 ГОДОМ!
           </div>
-          <div style="font-size: 22px; color:#4fc3f7; text-shadow:0 0 15px #4fc3f7;">
+          <div style="
+            font-size: ${isMobile ? '18px' : '22px'}; 
+            color:#4fc3f7; 
+            text-shadow:0 0 15px #4fc3f7;
+            line-height: 1.3;
+            margin-bottom: 8px;
+          ">
             Пусть каждый миг будет волшебным! ✨
           </div>
-          <div style="font-size: 18px; margin-top: 10px; color:#ffd700;">
+          <div style="
+            font-size: ${isMobile ? '16px' : '18px'}; 
+            color:#ffd700;
+            line-height: 1.2;
+          ">
             Мечты сбываются, а счастье множится! 💫🎁🎆
           </div>
         </div>
@@ -1193,73 +1260,81 @@ function animate() {
     camera.position.y += Math.cos(time * 0.35) * 0.012;
     camera.lookAt(0, 1, -3);
    
-    // Снегопад
-    snowflakes.forEach(s => {
-      s.mesh.material.opacity = Math.min(s.mesh.material.opacity + 0.01, 0.9);
-      s.mesh.position.add(s.velocity);
-     
-      if (s.mesh.position.y < -2) {
-        s.mesh.position.y = s.resetY;
-        s.mesh.position.x = (Math.random() - 0.5) * 20;
-        s.mesh.position.z = (Math.random() - 0.5) * 20 - 3;
-      }
-    });
-   
     // Плавное усиление музыки
     if (audio && audio.volume < 0.85) {
       audio.volume += 0.0003;
     }
    
     // Разнообразные праздничные поздравления
-    // Разнообразные праздничные поздравления
-if (Math.random() > 0.983) {
-  const finalMessages = [
-    { text: "💐 Пусть твоя жизнь будет наполнена красотой, вдохновением и мелодиями, от которых сердце замирает! 💐", color: "#e0b0ff" },
-    { text: "📚 Желаю, чтобы все экзамены сдавались на «отлично» так же легко, как ты подпеваешь любимым песням! 📚", color: "#87ceeb" },
-    { text: "✨ Пусть грядущий год принесет тебе столько же восхищения, сколько ты даришь окружающим. ✨", color: "#ffb6c1" },
-    { text: "🩺 Желаю тебе не только профессиональных успехов, но и море личного, тихого счастья. 🩺", color: "#98fb98" },
-    { text: "🎤 Пусть в твоей жизни будет много музыки, танцев и моментов, таких же прекрасных, как треки Лазарева! 🎤", color: "#ffa07a" },
-    { text: "💌 Желаю тебе море любви, поддержки и исполнения самых сокровенных желаний! 💌", color: "#dda0dd" }
-  ];
-  const msgObj = finalMessages[Math.floor(Math.random() * finalMessages.length)];
-  
-  // Определяем размер шрифта в зависимости от ширины экрана
-  const isMobile = window.innerWidth <= 768;
-  const fontSize = isMobile ? '18px' : '26px';
-  const lineHeight = isMobile ? '1.3' : '1.4';
-  const padding = isMobile ? '10px 15px' : '15px 20px';
-  
-  progressDiv.innerHTML = `
-  <div style="text-align: center; max-width: 95%; margin: 0 auto; padding: 10px;">
-    <div style="
-      font-size: ${window.innerWidth <= 768 ? '24px' : '32px'}; 
-      margin-bottom: ${window.innerWidth <= 768 ? '5px' : '10px'}; 
-      color:#ff3366; 
-      text-shadow:0 0 20px #ff3366;
-      line-height: 1.2;
-    ">
-      С НОВЫМ 2026 ГОДОМ!
-    </div>
-    <div style="
-      font-size: ${window.innerWidth <= 768 ? '18px' : '22px'}; 
-      color:#4fc3f7; 
-      text-shadow:0 0 15px #4fc3f7;
-      line-height: 1.3;
-      margin-bottom: 8px;
-    ">
-      Пусть каждый миг будет волшебным! ✨
-    </div>
-    <div style="
-      font-size: ${window.innerWidth <= 768 ? '16px' : '18px'}; 
-      color:#ffd700;
-      line-height: 1.2;
-    ">
-      Мечты сбываются, а счастье множится! 💫🎁🎆
-    </div>
-  </div>
-`;
-}
+    if (Math.random() > 0.983) {
+      const finalMessages = [
+        { text: "💐 Пусть твоя жизнь будет наполнена красотой, вдохновением и мелодиями, от которых сердце замирает! 💐", color: "#e0b0ff" },
+        { text: "📚 Желаю, чтобы все экзамены сдавались на «отлично» так же легко, как ты подпеваешь любимым песням! 📚", color: "#87ceeb" },
+        { text: "✨ Пусть грядущий год принесет тебе столько же восхищения, сколько ты даришь окружающим. ✨", color: "#ffb6c1" },
+        { text: "🩺 Желаю тебе не только профессиональных успехов, но и море личного, тихого счастья. 🩺", color: "#98fb98" },
+        { text: "🎤 Пусть в твоей жизни будет много музыки, танцев и моментов, таких же прекрасных, как треки Лазарева! 🎤", color: "#ffa07a" },
+        { text: "💌 Желаю тебе море любви, поддержки и исполнения самых сокровенных желаний! 💌", color: "#dda0dd" }
+      ];
+      const msgObj = finalMessages[Math.floor(Math.random() * finalMessages.length)];
+      
+      // Определяем размер шрифта в зависимости от ширины экрана
+      const isMobile = window.innerWidth <= 768;
+      const fontSize = isMobile ? '18px' : '26px';
+      const lineHeight = isMobile ? '1.3' : '1.4';
+      const padding = isMobile ? '10px 15px' : '15px 20px';
+      
+      progressDiv.innerHTML = `
+        <div style="
+          text-align: center; 
+          animation: glow 2s infinite;
+          padding: ${padding};
+          max-width: 95%;
+          margin: 0 auto;
+        ">
+          <div style="
+            font-size: ${fontSize};
+            line-height: ${lineHeight};
+            color: ${msgObj.color}; 
+            text-shadow: 0 0 15px ${msgObj.color};
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+          ">
+            ${msgObj.text}
+          </div>
+        </div>
+      `;
+    }
   }
+
+  // ВАЖНО: ОБНОВЛЕНИЕ СНЕЖИНОК ВО ВСЕХ ФАЗАХ (после запуска снегопада)
+  if (snowStarted) {
+    snowflakes.forEach(s => {
+      // Обновляем позицию снежинки
+      s.mesh.position.add(s.velocity);
+      
+      // Добавляем легкое колебание для реалистичности
+      s.mesh.position.x += Math.sin(time * 0.5 + s.mesh.id * 0.1) * 0.001;
+      s.mesh.position.z += Math.cos(time * 0.3 + s.mesh.id * 0.1) * 0.001;
+      
+      // Перезапускаем снежинки, если они упали слишком низко
+      if (s.mesh.position.y < -5) {
+        s.mesh.position.y = s.resetY;
+        s.mesh.position.x = (Math.random() - 0.5) * 25;
+        s.mesh.position.z = (Math.random() - 0.5) * 25 - 10;
+        
+        // Случайный размер для разнообразия
+        const scale = Math.random() * 0.8 + 0.6;
+        s.mesh.scale.set(scale, scale, scale);
+      }
+      
+      // Легкое мерцание снежинок
+      if (Math.random() > 0.98) {
+        s.mesh.material.opacity = Math.random() * 0.3 + 0.6;
+      }
+    });
+  }
+  
+  // Рендеринг сцены
   renderer.render(scene, camera);
 }
 // ==================== АДАПТИВНОСТЬ ====================
